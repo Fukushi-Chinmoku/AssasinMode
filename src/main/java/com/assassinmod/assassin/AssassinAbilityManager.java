@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -135,8 +136,8 @@ public final class AssassinAbilityManager {
 
     public static void activateMirage(Player player, LivingEntity target) {
         if (target == null || !hasClass(player) || !canUse(player, TAG_MIRAGE_CD)) return;
-        if (!(target instanceof ServerPlayer) && !(target instanceof net.minecraft.world.entity.monster.Monster)) {
-            player.sendSystemMessage(Component.literal("Mirage can target players and monsters only."));
+        if (target == player) {
+            player.sendSystemMessage(Component.literal("Mirage cannot target yourself."));
             return;
         }
         if (player.distanceTo(target) > 30.0D) {
@@ -149,7 +150,7 @@ public final class AssassinAbilityManager {
         setCooldown(player, TAG_MIRAGE_CD, 300);
     }
 
-    public static void tickMirages(ServerLevel level) {
+    public static void tickMirages() {
         for (Map.Entry<UUID, MirageEffect> entry : new HashMap<>(MIRAGES).entrySet()) {
             MirageEffect effect = entry.getValue();
             if (effect == null || effect.expired()) {
@@ -157,6 +158,15 @@ public final class AssassinAbilityManager {
                 continue;
             }
             effect.tick();
+        }
+    }
+
+    public static void clearMirageForClone(Entity clone) {
+        if (clone == null || !isMirageClone(clone)) return;
+        for (MirageEffect effect : MIRAGES.values()) {
+            if (effect.removeClone(clone)) {
+                return;
+            }
         }
     }
 

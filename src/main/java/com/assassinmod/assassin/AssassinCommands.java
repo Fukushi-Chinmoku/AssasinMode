@@ -20,10 +20,10 @@ public final class AssassinCommands {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("assassin")
                 .then(Commands.literal("give").executes(context -> giveClass(context)))
                 .then(Commands.literal("cooldown").then(Commands.literal("reset").executes(context -> resetCooldowns(context))))
-                .then(Commands.literal("test").then(Commands.literal("backstab").executes(context -> testBackstab(context))))
-                .then(Commands.literal("test").then(Commands.literal("shadowstep").executes(context -> testShadowStep(context))))
-                .then(Commands.literal("test").then(Commands.literal("veil").executes(context -> testVeil(context))))
-                .then(Commands.literal("test").then(Commands.literal("mirage").executes(context -> testMirage(context))));
+                .then(Commands.literal("test").then(Commands.literal("backstab").executes(context -> testBackstab(context)))
+                        .then(Commands.literal("shadowstep").executes(context -> testShadowStep(context)))
+                        .then(Commands.literal("veil").executes(context -> testVeil(context)))
+                        .then(Commands.literal("mirage").executes(context -> testMirage(context))));
         event.getDispatcher().register(root);
     }
 

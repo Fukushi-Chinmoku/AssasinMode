@@ -1,14 +1,14 @@
 package com.assassinmod.assassin;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 public final class AssassinEventHandler {
     private AssassinEventHandler() {
@@ -30,6 +30,17 @@ public final class AssassinEventHandler {
         AssassinAbilityManager.applyAssassinDamage(attacker, target, event);
     }
 
+    public static void onLivingDamagePost(final LivingDamageEvent.Post event) {
+        AssassinAbilityManager.clearMirageForClone(event.getEntity());
+        if (event.getSource().getEntity() instanceof ServerPlayer attacker
+                && AssassinAbilityManager.hasClass(attacker)
+                && event.getNewDamage() > 0.0F) {
+            String amount = String.format(java.util.Locale.ROOT, "%.1f", event.getNewDamage());
+            attacker.displayClientMessage(Component.literal("Damage: " + amount + " ❤")
+                    .withStyle(ChatFormatting.RED), true);
+        }
+    }
+
     public static void onPlayerTick(final PlayerTickEvent.Post event) {
         if (event.getEntity() == null || event.getEntity().level().isClientSide) return;
         Player player = event.getEntity();
@@ -47,10 +58,8 @@ public final class AssassinEventHandler {
         AssassinAbilityManager.endShadowVeil(event.getEntity());
     }
 
-    public static void onEntityJoin(final EntityJoinLevelEvent event) {
-        if (event.getLevel() instanceof ServerLevel serverLevel) {
-            AssassinAbilityManager.tickMirages(serverLevel);
-        }
+    public static void onServerTick(final ServerTickEvent.Post event) {
+        AssassinAbilityManager.tickMirages();
     }
 
     public static void onPlayerClone(final PlayerEvent.Clone event) {
