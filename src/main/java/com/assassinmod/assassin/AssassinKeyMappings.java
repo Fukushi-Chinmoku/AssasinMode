@@ -16,6 +16,7 @@ public final class AssassinKeyMappings {
     public static final KeyMapping SHADOW_STEP = new KeyMapping("key.assassin.shadow_step", GLFW.GLFW_KEY_Z, "key.category.assassin");
     public static final KeyMapping SHADOW_VEIL = new KeyMapping("key.assassin.shadow_veil", GLFW.GLFW_KEY_X, "key.category.assassin");
     public static final KeyMapping MIRAGE = new KeyMapping("key.assassin.mirage", GLFW.GLFW_KEY_C, "key.category.assassin");
+    public static final KeyMapping SKILL_TREE = new KeyMapping("key.assassin.skill_tree", GLFW.GLFW_KEY_V, "key.category.assassin");
 
     private static boolean lastShadowStepDown;
     private static boolean lastShadowVeilDown;
@@ -29,6 +30,7 @@ public final class AssassinKeyMappings {
         event.register(SHADOW_STEP);
         event.register(SHADOW_VEIL);
         event.register(MIRAGE);
+        event.register(SKILL_TREE);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -46,6 +48,11 @@ public final class AssassinKeyMappings {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null || minecraft.screen != null) return;
+
+        if (SKILL_TREE.consumeClick()) {
+            AssassinNetwork.sendOpenSkillTreeRequest();
+            return;
+        }
 
         boolean shadowStepClicked = SHADOW_STEP.consumeClick();
         boolean shadowVeilClicked = SHADOW_VEIL.consumeClick();

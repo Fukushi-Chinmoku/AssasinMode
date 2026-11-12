@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class MirageEffect {
-    private static final int CLONE_COUNT = 84;
-    private static final int EFFECT_DURATION = 600;
     private static final double RUN_SPEED = 0.28D;
     private final Player source;
     private final LivingEntity target;
+    private final int cloneCount;
+    private final int effectDuration;
     private final List<FakePlayer> clones = new ArrayList<>();
     private int ticks;
     private int nextAttackerIndex;
@@ -44,6 +44,8 @@ public class MirageEffect {
     public MirageEffect(Player source, LivingEntity target) {
         this.source = source;
         this.target = target;
+        this.cloneCount = 84 + (AssassinProgression.hasSkill(source, "false_horde") ? 20 : 0);
+        this.effectDuration = 600 + (AssassinProgression.hasSkill(source, "lingering_mist") ? 100 : 0);
     }
 
     public void start() {
@@ -54,8 +56,8 @@ public class MirageEffect {
                 ? serverPlayer.getGameProfile().getProperties() : null;
         String playerName = source instanceof ServerPlayer serverPlayer
                 ? serverPlayer.getGameProfile().getName() : "Player";
-        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, EFFECT_DURATION, 0, false, false, true));
-        for (int i = 0; i < CLONE_COUNT; i++) {
+        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, effectDuration, 0, false, false, true));
+        for (int i = 0; i < cloneCount; i++) {
             GameProfile profile = new GameProfile(UUID.randomUUID(), playerName);
             if (skinProperties != null) {
                 profile.getProperties().putAll(skinProperties);
@@ -94,7 +96,7 @@ public class MirageEffect {
         }
 
         ticks++;
-        if (ticks >= EFFECT_DURATION) {
+        if (ticks >= effectDuration) {
             remove();
             return;
         }
@@ -180,7 +182,7 @@ public class MirageEffect {
     }
 
     public boolean expired() {
-        return ticks >= EFFECT_DURATION || target == null || !target.isAlive();
+        return ticks >= effectDuration || target == null || !target.isAlive();
     }
 
     private double crowdAngle(int index, int tick) {

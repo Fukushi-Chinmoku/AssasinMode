@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ISI",
+    "IDI",
+    " S "
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "S": { "item": "minecraft:stick" },
+    "D": { "item": "minecraft:diamond" }
+  },
+  "result": {
+    "id": "assassin:assassin_twin_blades",
+    "count": 1
+  }
+}

@@ -1,0 +1,9 @@
+Assassin skill tree artwork attribution
+
+The files in src/main/resources/assets/assassin/textures/passive/ are adapted from
+Passive Skill Tree by Daripher, https://github.com/Daripher/Passive-Skill-Tree
+(release 0.7.6e; Minecraft Forge 1.20.1). The Passive Skill Tree project
+identifies its license as GNU General Public License version 3. These adapted
+art assets and this project are distributed under GPL-3.0-only. The rest of the
+Assassin mod remains subject to the terms of its applicable license except
+where distribution of these assets requires otherwise.

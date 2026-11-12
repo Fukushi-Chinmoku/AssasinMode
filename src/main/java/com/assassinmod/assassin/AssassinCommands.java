@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -24,7 +25,65 @@ public final class AssassinCommands {
                         .then(Commands.literal("shadowstep").executes(context -> testShadowStep(context)))
                         .then(Commands.literal("veil").executes(context -> testVeil(context)))
                         .then(Commands.literal("mirage").executes(context -> testMirage(context))));
+        root.then(Commands.literal("blades").requires(source -> source.hasPermission(2))
+                .executes(context -> giveTwinBlades(context)));
+        root.then(Commands.literal("tree")
+                .then(Commands.literal("rewards").executes(context -> showMilestones(context)))
+                .then(Commands.literal("testpoints")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 100))
+                                .executes(context -> grantTestPoints(context))))
+                .then(Commands.literal("reset")
+                        .requires(source -> source.hasPermission(2))
+                        .executes(context -> resetSkillTree(context)))
+                .then(Commands.literal("respec").executes(context -> respecSkillTree(context))));
         event.getDispatcher().register(root);
+    }
+
+    private static int giveTwinBlades(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
+            return 0;
+        }
+        player.getInventory().add(new ItemStack(AssassinItems.TWIN_BLADES.get()));
+        context.getSource().sendSuccess(() -> Component.literal("Twin Blades added to your inventory."), false);
+        return 1;
+    }
+
+    private static int showMilestones(CommandContext<CommandSourceStack> context) {
+        context.getSource().sendSuccess(() -> Component.literal("Assassin skill points come only from these milestones:"), false);
+        for (AssassinProgression.Milestone milestone : AssassinProgression.MILESTONES) {
+            context.getSource().sendSuccess(() -> Component.literal("• " + milestone.title() + " — "
+                    + milestone.advancement() + " (" + milestone.points() + " point(s))"), false);
+        }
+        return AssassinProgression.MILESTONES.size();
+    }
+
+    private static int grantTestPoints(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) return 0;
+        int amount = IntegerArgumentType.getInteger(context, "amount");
+        AssassinProgression.addPoints(player, amount);
+        player.sendSystemMessage(Component.literal("[Skill Tree Test] Added " + amount + " temporary skill points."));
+        return amount;
+    }
+
+    private static int resetSkillTree(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) return 0;
+        AssassinProgression.resetForTesting(player);
+        player.sendSystemMessage(Component.literal("[Skill Tree Test] Points, unlocked skills and milestone claims reset."));
+        return 1;
+    }
+
+    private static int respecSkillTree(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) return 0;
+        int refunded = AssassinProgression.respec(player);
+        player.sendSystemMessage(Component.literal("Skill tree reset. Refunded " + refunded
+                + " point(s); achievement rewards remain claimed."));
+        return 1;
     }
 
     private static int giveClass(CommandContext<CommandSourceStack> context) {

@@ -1,1 +1,28 @@
 /assassin give
+/assassin cooldown
+/assassin give
+/assassin blades
+/assassin tree
+/assassin tree rewards
+/assassin blades
+/assassin
+/assassin give
+/assassin blades
+/assassin tree rewards
+/assassin blades
+/assassin give
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12
+/
+/assassin tree testpoints 12
+/assassin give
+/assassin tree testpoints 12

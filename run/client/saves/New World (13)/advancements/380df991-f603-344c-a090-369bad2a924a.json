@@ -1,0 +1,16 @@
+{
+  "minecraft:recipes/decorations/crafting_table": {
+    "criteria": {
+      "unlock_right_away": "2026-11-11 01:30:03 +0300"
+    },
+    "done": true
+  },
+  "minecraft:adventure/adventuring_time": {
+    "criteria": {
+      "minecraft:snowy_plains": "2026-11-11 01:30:04 +0300",
+      "minecraft:windswept_gravelly_hills": "2026-11-11 01:31:01 +0300"
+    },
+    "done": false
+  },
+  "DataVersion": 3955
+}

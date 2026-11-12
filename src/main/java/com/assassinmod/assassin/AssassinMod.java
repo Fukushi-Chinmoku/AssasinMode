@@ -18,14 +18,18 @@ public class AssassinMod {
     public AssassinMod(IEventBus modBus, ModContainer container) {
         modBus.addListener(this::commonSetup);
         modBus.addListener(AssassinNetwork::register);
+        AssassinItems.register(modBus);
 
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onLivingHurt);
+        NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onLivingChangeTarget);
+        NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onLivingVisibility);
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onLivingDamagePost);
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onPlayerTick);
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onPlayerLoggedOut);
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onServerTick);
         NeoForge.EVENT_BUS.addListener(AssassinCommands::register);
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onPlayerClone);
+        NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onAdvancementEarn);
         if (FMLEnvironment.dist.isClient()) {
             NeoForge.EVENT_BUS.addListener(AssassinKeyMappings::onClientTick);
         }

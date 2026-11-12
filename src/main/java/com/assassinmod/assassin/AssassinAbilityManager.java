@@ -99,6 +99,10 @@ public final class AssassinAbilityManager {
 
     public static boolean performShadowStep(Player player, Entity target) {
         if (target == null || target.level() != player.level() || !hasClass(player)) return false;
+        if (!AssassinProgression.hasSkill(player, "shadow_step")) {
+            player.sendSystemMessage(Component.literal("Unlock Shadow Step in the skill tree first (press V)."));
+            return false;
+        }
         if (!canUse(player, TAG_SHADOW_STEP_CD)) return false;
         if (target.distanceTo(player) > 100.0D) {
             player.sendSystemMessage(Component.literal("Target is out of range."));
@@ -112,16 +116,34 @@ public final class AssassinAbilityManager {
         player.level().playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
         player.level().addParticle(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0D, player.getZ(), 0, 0.2D, 0);
         player.teleportTo(behind.x, behind.y, behind.z);
+        Vec3 targetEyes = target.getEyePosition();
+        Vec3 playerEyes = player.getEyePosition();
+        Vec3 look = targetEyes.subtract(playerEyes);
+        double horizontal = Math.sqrt(look.x * look.x + look.z * look.z);
+        float yaw = (float) (Math.toDegrees(Math.atan2(-look.x, look.z)));
+        float pitch = (float) (-Math.toDegrees(Math.atan2(look.y, horizontal)));
+        player.setYRot(yaw);
+        player.setXRot(pitch);
+        player.setYHeadRot(yaw);
+        player.setYBodyRot(yaw);
         player.level().playSound(null, behind.x, behind.y, behind.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
         player.level().addParticle(ParticleTypes.PORTAL, behind.x, behind.y + 1.0D, behind.z, 0, 0.2D, 0);
-        setCooldown(player, TAG_SHADOW_STEP_CD, 120);
+        int cooldown = AssassinProgression.hasSkill(player, "echo_step") ? 60
+                : AssassinProgression.hasSkill(player, "far_step") ? 80 : 120;
+        setCooldown(player, TAG_SHADOW_STEP_CD, cooldown);
         return true;
     }
 
     public static void activateShadowVeil(Player player) {
+        if (!AssassinProgression.hasSkill(player, "shadow_veil")) {
+            player.sendSystemMessage(Component.literal("Unlock Shadow Veil in the skill tree first (press V)."));
+            return;
+        }
         if (!hasClass(player) || !canUse(player, TAG_SHADOW_VEIL_CD)) return;
         player.setInvisible(true);
-        player.getPersistentData().putLong(TAG_SHADOW_VEIL_UNTIL, player.level().getGameTime() + 120L);
+        int duration = AssassinProgression.hasSkill(player, "deep_veil") ? 200 : 120;
+        player.getPersistentData().putLong(TAG_SHADOW_VEIL_UNTIL, player.level().getGameTime() + duration);
+        clearHostileTargets(player);
         player.level().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.0F, 1.0F);
         player.level().addParticle(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 0, 0.2D, 0);
         setCooldown(player, TAG_SHADOW_VEIL_CD, 240);
@@ -135,12 +157,17 @@ public final class AssassinAbilityManager {
     }
 
     public static void activateMirage(Player player, LivingEntity target) {
+        if (!AssassinProgression.hasSkill(player, "mirage")) {
+            player.sendSystemMessage(Component.literal("Unlock Mirage in the skill tree first (press V)."));
+            return;
+        }
         if (target == null || !hasClass(player) || !canUse(player, TAG_MIRAGE_CD)) return;
         if (target == player) {
             player.sendSystemMessage(Component.literal("Mirage cannot target yourself."));
             return;
         }
-        if (player.distanceTo(target) > 30.0D) {
+        double maxRange = AssassinProgression.hasSkill(player, "phantom_lunge") ? 45.0D : 30.0D;
+        if (player.distanceTo(target) > maxRange) {
             player.sendSystemMessage(Component.literal("Target is too far away."));
             return;
         }
@@ -185,7 +212,16 @@ public final class AssassinAbilityManager {
     }
 
     public static boolean isShadowVeilActive(Player player) {
-        return player != null && player.isInvisible();
+        return player != null && player.isInvisible()
+                && player.getPersistentData().contains(TAG_SHADOW_VEIL_UNTIL);
+    }
+
+    public static void clearHostileTargets(Player player) {
+        if (player == null || player.level().isClientSide) return;
+        AABB area = player.getBoundingBox().inflate(64.0D);
+        for (Mob mob : player.level().getEntitiesOfClass(Mob.class, area)) {
+            if (mob.getTarget() == player) mob.setTarget(null);
+        }
     }
 
     public static boolean isBehindTarget(LivingEntity attacker, LivingEntity target) {
@@ -196,8 +232,10 @@ public final class AssassinAbilityManager {
 
     public static void applyAssassinDamage(LivingEntity attacker, LivingEntity target, LivingDamageEvent.Pre event) {
         if (!(attacker instanceof Player player) || !hasClass(player)) return;
+        if (!AssassinProgression.hasSkill(player, "backstab")) return;
         if (!isBehindTarget(attacker, target)) return;
-        float amount = event.getNewDamage() * 2.0F;
+        float multiplier = AssassinProgression.hasSkill(player, "executioner") ? 2.5F : 2.0F;
+        float amount = event.getNewDamage() * multiplier;
         event.setNewDamage(amount);
     }
 
