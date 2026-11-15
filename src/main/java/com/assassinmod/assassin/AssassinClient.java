@@ -30,7 +30,6 @@ public final class AssassinClient {
     public static void handleSkillTreeOpen(boolean allowed) {
         Minecraft minecraft = Minecraft.getInstance();
         if (!allowed) {
-            if (minecraft.player != null) minecraft.player.sendSystemMessage(Component.literal("Become an Assassin to open this skill tree."));
             return;
         }
 

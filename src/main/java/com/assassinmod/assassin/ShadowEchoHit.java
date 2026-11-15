@@ -16,6 +16,8 @@ import java.util.List;
 
 /** One-clone follow-up attack triggered by the Shadow Echo Hit skill. */
 public final class ShadowEchoHit {
+    private static final double PASS_THROUGH_DISTANCE = 0.65D;
+    private static final int FOLLOW_UP_DELAY_TICKS = 10;
     private static final List<ShadowEchoHit> ACTIVE = new ArrayList<>();
     private static final List<DelayedStrike> DELAYED = new ArrayList<>();
 
@@ -28,10 +30,11 @@ public final class ShadowEchoHit {
     private final Vec3 start;
     private final Vec3 direction;
     private final double distance;
+    private final double totalDistance;
     private final float damage;
     private final boolean canFollowUp;
     private double travelled;
-    private int ticks;
+    private boolean struck;
 
     private ShadowEchoHit(ServerPlayer owner, LivingEntity target, ServerLevel level,
                           ShadowCloneEntity clone, Vec3 start, Vec3 direction, double distance,
@@ -43,6 +46,7 @@ public final class ShadowEchoHit {
         this.start = start;
         this.direction = direction;
         this.distance = distance;
+        this.totalDistance = distance + PASS_THROUGH_DISTANCE;
         this.damage = damage;
         this.canFollowUp = canFollowUp;
     }
@@ -109,13 +113,17 @@ public final class ShadowEchoHit {
     }
 
     private void tick() {
-        if (!clone.isAlive() || !target.isAlive() || ++ticks > 12) {
+        if (!clone.isAlive() || (!struck && !target.isAlive())) {
             finish();
             return;
         }
 
-        travelled = Math.min(distance, travelled + 0.6D);
-        double progress = distance <= 0.01D ? 1.0D : travelled / distance;
+        if (travelled >= totalDistance) {
+            finish();
+            return;
+        }
+        travelled = Math.min(totalDistance, travelled + 0.6D);
+        double progress = totalDistance <= 0.01D ? 1.0D : travelled / totalDistance;
         Vec3 position = start.add(direction.scale(travelled));
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 Mth.floor(position.x), Mth.floor(position.z));
@@ -126,7 +134,8 @@ public final class ShadowEchoHit {
         level.sendParticles(ParticleTypes.SQUID_INK, position.x, position.y + 0.8D, position.z,
                 2, 0.12D, 0.2D, 0.12D, 0.01D);
 
-        if (progress >= 1.0D || clone.distanceToSqr(target) <= 1.0D) {
+        if (!struck && (travelled >= distance || clone.distanceToSqr(target) <= 1.0D)) {
+            struck = true;
             clone.swing(InteractionHand.MAIN_HAND);
             level.sendParticles(ParticleTypes.SWEEP_ATTACK,
                     target.getX(), target.getY() + target.getBbHeight() * 0.6D, target.getZ(),
@@ -136,10 +145,11 @@ public final class ShadowEchoHit {
             target.invulnerableTime = Math.min(target.invulnerableTime, 10);
             target.hurt(clone.damageSources().mobAttack(clone), damage);
             if (canFollowUp && target.isAlive()) {
-                DELAYED.add(new DelayedStrike(owner, target, damage, level.getGameTime() + 20L));
+                DELAYED.add(new DelayedStrike(owner, target, damage,
+                        level.getGameTime() + FOLLOW_UP_DELAY_TICKS));
             }
-            finish();
         }
+        if (struck && travelled >= totalDistance) finish();
     }
 
     private static void faceTarget(ShadowCloneEntity clone, LivingEntity target) {

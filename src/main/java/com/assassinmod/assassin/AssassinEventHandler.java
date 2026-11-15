@@ -1,8 +1,6 @@
 package com.assassinmod.assassin;
 
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -91,13 +89,6 @@ public final class AssassinEventHandler {
         if (event.getEntity() instanceof ShadowCloneEntity clone
                 && event.getSource().getEntity() instanceof LivingEntity attacker) {
             VeilDecoy.onCloneHit(clone, attacker);
-        }
-        if (event.getSource().getEntity() instanceof ServerPlayer attacker
-                && AssassinAbilityManager.hasClass(attacker)
-                && event.getNewDamage() > 0.0F) {
-            String amount = String.format(java.util.Locale.ROOT, "%.1f", event.getNewDamage());
-            attacker.displayClientMessage(Component.literal("Damage: " + amount + " ❤")
-                    .withStyle(ChatFormatting.RED), true);
         }
     }
 

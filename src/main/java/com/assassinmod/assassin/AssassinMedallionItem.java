@@ -1,6 +1,5 @@
 package com.assassinmod.assassin;
 
-import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -20,7 +19,6 @@ public final class AssassinMedallionItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide) return InteractionResultHolder.sidedSuccess(stack, true);
         if (AssassinAbilityManager.hasClass(player)) {
-            player.sendSystemMessage(Component.literal("You are already an Assassin."));
             return InteractionResultHolder.fail(stack);
         }
 
@@ -28,7 +26,6 @@ public final class AssassinMedallionItem extends Item {
         if (!player.getAbilities().instabuild) stack.shrink(1);
         level.playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP,
                 SoundSource.PLAYERS, 0.8F, 1.3F);
-        player.sendSystemMessage(Component.literal("The Assassin Medallion awakens your class. Press V to open the skill tree."));
         return InteractionResultHolder.success(stack);
     }
 }

@@ -10,7 +10,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 public final class AssassinCommands {
@@ -45,31 +44,18 @@ public final class AssassinCommands {
 
     private static int buySkillPoint(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
-            return 0;
-        }
+        if (player == null) return 0;
         return AssassinProgression.buySkillPoint(player) ? 1 : 0;
     }
 
     private static int giveTwinBlades(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
-            return 0;
-        }
+        if (player == null) return 0;
         player.getInventory().add(new ItemStack(AssassinItems.TWIN_BLADES.get()));
-        context.getSource().sendSuccess(() -> Component.literal("Twin Blades added to your inventory."), false);
         return 1;
     }
 
     private static int showMilestones(CommandContext<CommandSourceStack> context) {
-        context.getSource().sendSuccess(() -> Component.literal(
-                "Buy skill points with 5 experience levels, or earn them from these milestones:"), false);
-        for (AssassinProgression.Milestone milestone : AssassinProgression.MILESTONES) {
-            context.getSource().sendSuccess(() -> Component.literal("• " + milestone.title() + " — "
-                    + milestone.advancement() + " (" + milestone.points() + " point(s))"), false);
-        }
         return AssassinProgression.MILESTONES.size();
     }
 
@@ -78,7 +64,6 @@ public final class AssassinCommands {
         if (player == null) return 0;
         int amount = IntegerArgumentType.getInteger(context, "amount");
         AssassinProgression.addPoints(player, amount);
-        player.sendSystemMessage(Component.literal("[Skill Tree Test] Added " + amount + " temporary skill points."));
         return amount;
     }
 
@@ -86,38 +71,27 @@ public final class AssassinCommands {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) return 0;
         AssassinProgression.resetForTesting(player);
-        player.sendSystemMessage(Component.literal("[Skill Tree Test] Points, unlocked skills and milestone claims reset."));
         return 1;
     }
 
     private static int respecSkillTree(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) return 0;
-        int refunded = AssassinProgression.respec(player);
-        player.sendSystemMessage(Component.literal("Skill tree reset. Refunded " + refunded
-                + " point(s); achievement rewards remain claimed."));
+        AssassinProgression.respec(player);
         return 1;
     }
 
     private static int giveClass(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
-            return 0;
-        }
+        if (player == null) return 0;
         AssassinAbilityManager.giveClass(player);
-        context.getSource().sendSuccess(() -> Component.literal("Assassin class granted."), true);
         return 1;
     }
 
     private static int resetCooldowns(CommandContext<CommandSourceStack> context) {
         ServerPlayer player = context.getSource().getPlayer();
-        if (player == null) {
-            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
-            return 0;
-        }
+        if (player == null) return 0;
         AssassinAbilityManager.resetCooldowns(player);
-        context.getSource().sendSuccess(() -> Component.literal("Cooldowns reset."), true);
         return 1;
     }
 
@@ -125,7 +99,6 @@ public final class AssassinCommands {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) return 0;
         AssassinAbilityManager.giveClass(player);
-        player.sendSystemMessage(Component.literal("Backstab test ready. Attack from behind to trigger the passive."));
         return 1;
     }
 
@@ -140,7 +113,6 @@ public final class AssassinCommands {
             }
         }
         if (target == null) {
-            player.sendSystemMessage(Component.literal("No nearby valid target found for Shadow Step."));
             return 0;
         }
         AssassinAbilityManager.performShadowStep(player, target);
@@ -165,7 +137,6 @@ public final class AssassinCommands {
             }
         }
         if (target == null) {
-            player.sendSystemMessage(Component.literal("No valid target found for Mirage."));
             return 0;
         }
         AssassinAbilityManager.activateMirage(player, target);

@@ -35,7 +35,7 @@
   "skill.assassin.shadow_dance.title": "Shadow Dance",
   "skill.assassin.shadow_dance.description": "Active ability: every hit summons a shadow for the duration. Lasts one second per rank. Cooldown: 90 seconds.",
   "skill.assassin.shadow_echo_followup.title": "Second Shadow",
-  "skill.assassin.shadow_echo_followup.description": "Passive upgrade: one second after the first clone strikes, a second appears on the left and repeats the strike.",
+  "skill.assassin.shadow_echo_followup.description": "Passive upgrade: half a second after the first clone strikes, a second appears on the left and repeats the strike.",
   "skill.assassin.perfect_dodge.title": "Perfect Dodge",
   "skill.assassin.perfect_dodge.description": "Ability (B): dodge all incoming damage for 5 seconds. Cooldown: 60 seconds.",
   "skill.assassin.sprinting.title": "Shinbreaker Sprint",

@@ -1,6 +1,5 @@
 package com.assassinmod.assassin;
 
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -89,9 +88,9 @@ public final class AssassinProgression {
                     new SkillResource("Длительность (секунды)", "[CurrentPoints]", "#ffff00"),
                     new SkillResource("Перезарядка (секунды)", "90", "#ffffff"))),
             new SkillNode(16, "shadow_echo_followup", "Вторая тень", "Смертоносность",
-                    "Пассивное улучшение: после удара первого клона через секунду слева появляется второй и повторяет удар.",
+                    "Пассивное улучшение: после удара первого клона через полсекунды слева появляется второй и повторяет удар.",
                     1, 1, new int[]{15}, List.of(
-                    new SkillResource("Задержка после удара (секунды)", "1", "#ffff00"),
+                    new SkillResource("Задержка после удара (секунды)", "0.5", "#ffff00"),
                     new SkillResource("Дополнительные тени", "1", "#ff4747")))
     );
 
@@ -284,8 +283,6 @@ public final class AssassinProgression {
                 || player.getPersistentData().getBoolean(ledgerKey(advancementId))) return;
         player.getPersistentData().putBoolean(ledgerKey(advancementId), true);
         addPoints(player, milestone.points());
-        player.sendSystemMessage(Component.literal("Assassin skill point +" + milestone.points()
-                + " for achievement: " + milestone.title()));
     }
 
     private static String ledgerKey(String advancement) {
@@ -301,30 +298,39 @@ public final class AssassinProgression {
     public static boolean buySkillPoint(ServerPlayer player) {
         if (player == null || !AssassinAbilityManager.hasClass(player)) return false;
         if (player.experienceLevel < EXPERIENCE_LEVELS_PER_POINT) {
-            player.sendSystemMessage(Component.literal("You need " + EXPERIENCE_LEVELS_PER_POINT
-                    + " experience levels to buy a skill point."));
             return false;
         }
         player.giveExperienceLevels(-EXPERIENCE_LEVELS_PER_POINT);
         addPoints(player, 1);
-        player.sendSystemMessage(Component.literal("Bought 1 Assassin skill point for "
-                + EXPERIENCE_LEVELS_PER_POINT + " experience levels."));
         return true;
     }
 
     public static void migrateSkillTree(ServerPlayer player) {
-        if (player == null || player.getPersistentData().getInt(TREE_REVISION_TAG) >= 6) return;
+        if (player == null || player.getPersistentData().getInt(TREE_REVISION_TAG) >= 8) return;
         int refunded = 0;
+        String retiredDebuffSightRankTag = RANK_TAG_PREFIX + "debuff_sight";
+        int debuffSightRank = player.getPersistentData().getInt(retiredDebuffSightRankTag);
+        player.getPersistentData().remove(retiredDebuffSightRankTag);
+        if (debuffSightRank > 0) {
+            refunded += debuffSightRank;
+        }
+        String retiredDebuffSightTag = NODE_TAG_PREFIX + "debuff_sight";
+        boolean hadRetiredDebuffSight = player.getPersistentData().getBoolean(retiredDebuffSightTag);
+        player.getPersistentData().remove(retiredDebuffSightTag);
+        if (hadRetiredDebuffSight) {
+            if (debuffSightRank == 0) refunded++;
+        }
         for (var retired : RETIRED_SKILLS.entrySet()) {
             String tag = NODE_TAG_PREFIX + retired.getKey();
             String rankTag = RANK_TAG_PREFIX + retired.getKey();
             int retiredRank = player.getPersistentData().getInt(rankTag);
+            player.getPersistentData().remove(rankTag);
             if (retiredRank > 0) {
-                player.getPersistentData().remove(rankTag);
                 refunded += retiredRank;
             }
-            if (player.getPersistentData().getBoolean(tag)) {
-                player.getPersistentData().remove(tag);
+            boolean hadRetiredSkill = player.getPersistentData().getBoolean(tag);
+            player.getPersistentData().remove(tag);
+            if (hadRetiredSkill) {
                 if (retiredRank == 0) refunded += retired.getValue();
             }
         }
@@ -338,10 +344,8 @@ public final class AssassinProgression {
         }
         if (refunded > 0) {
             player.getPersistentData().putInt(POINTS_TAG, getPoints(player) + refunded);
-            player.sendSystemMessage(Component.literal("Your skill tree was updated. Refunded " + refunded
-                    + " points from retired skills."));
         }
-        player.getPersistentData().putInt(TREE_REVISION_TAG, 6);
+        player.getPersistentData().putInt(TREE_REVISION_TAG, 8);
         AssassinNetwork.syncAbilityStateNow(player);
     }
 
@@ -350,20 +354,16 @@ public final class AssassinProgression {
         SkillNode node = NODES.get(index);
         int currentRank = getRank(player, index);
         if (currentRank >= node.maxRanks()) {
-            player.sendSystemMessage(Component.literal(node.name() + " is already at maximum rank."));
             return false;
         }
         if (!isReachable(player, index)) {
-            player.sendSystemMessage(Component.literal("Unlock a connected skill first."));
             return false;
         }
         if (getPoints(player) < node.cost()) {
-            player.sendSystemMessage(Component.literal("You need " + node.cost() + " skill point(s) for " + node.name() + "."));
             return false;
         }
         player.getPersistentData().putInt(POINTS_TAG, getPoints(player) - node.cost());
         player.getPersistentData().putInt(RANK_TAG_PREFIX + node.id(), currentRank + 1);
-        player.sendSystemMessage(Component.literal(node.name() + " rank " + (currentRank + 1) + "/" + node.maxRanks()));
         AssassinNetwork.syncAbilityStateNow(player);
         return true;
     }

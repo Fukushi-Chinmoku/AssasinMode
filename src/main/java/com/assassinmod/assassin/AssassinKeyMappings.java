@@ -99,22 +99,14 @@ public final class AssassinKeyMappings {
             double range = AssassinProgression.getResourceValueForRank(9, 0,
                     AssassinClientState.getSkillRank(9));
             Entity target = resolveTargetEntity(player, range);
-            if (target == null) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("No valid target in range."));
-            } else {
-                AssassinNetwork.sendAbilityRequest(0, target.getId());
-            }
+            if (target != null) AssassinNetwork.sendAbilityRequest(0, target.getId());
         }
 
         if (shadowTwinPressed) {
             double range = AssassinProgression.getResourceValueForRank(6, 1,
                     AssassinClientState.getSkillRank(6));
             Entity target = resolveTargetEntity(player, range);
-            if (target == null) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("No valid target in range."));
-            } else {
-                AssassinNetwork.sendAbilityRequest(3, target.getId());
-            }
+            if (target != null) AssassinNetwork.sendAbilityRequest(3, target.getId());
         }
 
         if (shadowVeilPressed) {
@@ -125,8 +117,6 @@ public final class AssassinKeyMappings {
             Entity target = resolveTargetEntity(player, 45.0D);
             if (target != null) {
                 AssassinNetwork.sendAbilityRequest(2, target.getId());
-            } else {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Aim at a living target to use Mirage."));
             }
         }
 

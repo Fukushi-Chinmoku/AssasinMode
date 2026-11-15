@@ -2,7 +2,6 @@ package com.assassinmod.assassin;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -55,7 +54,6 @@ public final class AssassinAbilityManager {
     public static void giveClass(Player player) {
         if (player == null) return;
         player.getPersistentData().putBoolean(TAG_ASSASSIN, true);
-        player.sendSystemMessage(Component.literal("You have become an Assassin."));
     }
 
     public static void resetCooldowns(Player player) {
@@ -141,7 +139,6 @@ public final class AssassinAbilityManager {
 
     public static void activatePerfectDodge(Player player) {
         if (!AssassinProgression.hasSkill(player, "perfect_dodge")) {
-            player.sendSystemMessage(Component.literal("Unlock Идеальное уклонение in the skill tree first (press V)."));
             return;
         }
         if (!hasClass(player) || !canUse(player, TAG_PERFECT_DODGE_CD)) return;
@@ -159,11 +156,9 @@ public final class AssassinAbilityManager {
 
     public static boolean canUse(Player player, String key) {
         if (!hasClass(player)) {
-            player.sendSystemMessage(Component.literal("You are not an Assassin."));
             return false;
         }
         if (player.getPersistentData().contains(key)) {
-            player.sendSystemMessage(Component.literal("Ability is on cooldown."));
             return false;
         }
         return true;
@@ -177,11 +172,9 @@ public final class AssassinAbilityManager {
     public static boolean performShadowStep(Player player, Entity target, boolean twinStrike) {
         if (target == null || target.level() != player.level() || !hasClass(player)) return false;
         if (twinStrike && !AssassinProgression.hasSkill(player, "shadow_twin")) {
-            player.sendSystemMessage(Component.literal("Unlock Shadow Twin Strike in the skill tree first (press V)."));
             return false;
         }
         if (!twinStrike && !AssassinProgression.hasSkill(player, "shadow_step")) {
-            player.sendSystemMessage(Component.literal("Unlock Shadow Step in the skill tree first (press V)."));
             return false;
         }
         if (!canUse(player, twinStrike ? TAG_SHADOW_TWIN_CD : TAG_SHADOW_STEP_CD)) return false;
@@ -190,12 +183,10 @@ public final class AssassinAbilityManager {
         double maxRange = Math.min(100.0D,
                 AssassinProgression.getResourceValue(player, skillIndex, rangeResource));
         if (target.distanceTo(player) > maxRange || !isTargetInView(player, target, maxRange)) {
-            player.sendSystemMessage(Component.literal("Target is out of range."));
             return false;
         }
         Vec3 behind = getSafeLocationBehindTarget(player, target);
         if (behind == null) {
-            player.sendSystemMessage(Component.literal("No safe position behind the target."));
             return false;
         }
         player.level().playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -235,7 +226,6 @@ public final class AssassinAbilityManager {
         if (!hasClass(player)) return;
         int rank = AssassinProgression.getRank(player, "shadow_dance");
         if (rank <= 0) {
-            player.sendSystemMessage(Component.literal("Unlock Пляс теней in the skill tree first (press V)."));
             return;
         }
         if (!canUse(player, TAG_SHADOW_DANCE_CD)) return;
@@ -249,7 +239,6 @@ public final class AssassinAbilityManager {
 
     public static void activateSprint(Player player) {
         if (!AssassinProgression.hasSkill(player, "sprinting")) {
-            player.sendSystemMessage(Component.literal("Unlock Срыв голени in the skill tree first (press V)."));
             return;
         }
         if (!hasClass(player) || !canUse(player, TAG_SPRINT_CD)) return;
@@ -261,7 +250,6 @@ public final class AssassinAbilityManager {
 
     public static void activateBackstep(Player player) {
         if (!AssassinProgression.hasSkill(player, "backstep")) {
-            player.sendSystemMessage(Component.literal("Unlock Отшаг in the skill tree first (press V)."));
             return;
         }
         if (!hasClass(player) || !canUse(player, TAG_BACKSTEP_CD)) return;
@@ -275,7 +263,6 @@ public final class AssassinAbilityManager {
         if (!player.level().getBlockState(feet).getCollisionShape(player.level(), feet).isEmpty()
                 || !player.level().getBlockState(head).getCollisionShape(player.level(), head).isEmpty()
                 || player.level().getBlockState(floor).getCollisionShape(player.level(), floor).isEmpty()) {
-            player.sendSystemMessage(Component.literal("No safe space to step back."));
             return;
         }
         Vec3 origin = player.position();
@@ -297,7 +284,6 @@ public final class AssassinAbilityManager {
 
     public static void activateShadowVeil(Player player) {
         if (!AssassinProgression.hasSkill(player, "shadow_veil")) {
-            player.sendSystemMessage(Component.literal("Unlock Shadow Veil in the skill tree first (press V)."));
             return;
         }
         if (!hasClass(player) || !canUse(player, TAG_SHADOW_VEIL_CD)) return;
@@ -315,7 +301,6 @@ public final class AssassinAbilityManager {
 
     public static void activateRapidAssault(Player player) {
         if (!AssassinProgression.hasSkill(player, "rapid_assault")) {
-            player.sendSystemMessage(Component.literal("Unlock Blade Flurry in the skill tree first (press V)."));
             return;
         }
         if (!hasClass(player) || !canUse(player, TAG_RAPID_ASSAULT_CD)) return;
@@ -343,17 +328,14 @@ public final class AssassinAbilityManager {
 
     public static void activateMirage(Player player, LivingEntity target) {
         if (!AssassinProgression.hasSkill(player, "mirage")) {
-            player.sendSystemMessage(Component.literal("Unlock Mirage in the skill tree first (press V)."));
             return;
         }
         if (target == null || !hasClass(player) || !canUse(player, TAG_MIRAGE_CD)) return;
         if (target == player) {
-            player.sendSystemMessage(Component.literal("Mirage cannot target yourself."));
             return;
         }
         double maxRange = 30.0D;
         if (player.distanceTo(target) > maxRange) {
-            player.sendSystemMessage(Component.literal("Target is too far away."));
             return;
         }
         // Recasting on the same target must not orphan the previous crowd.
@@ -466,7 +448,6 @@ public final class AssassinAbilityManager {
         if (isShadowVeilActive(attacker)) {
             endShadowVeil(attacker);
             attacker.getPersistentData().remove(TAG_SHADOW_VEIL_UNTIL);
-            attacker.sendSystemMessage(Component.literal("Shadow Veil has ended."));
         }
         if (target != null && target instanceof net.minecraft.world.entity.player.Player targetPlayer) {
             MirageEffect effect = MIRAGES.get(targetPlayer.getUUID());

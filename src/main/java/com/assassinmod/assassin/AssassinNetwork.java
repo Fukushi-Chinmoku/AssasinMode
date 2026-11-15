@@ -109,7 +109,6 @@ public final class AssassinNetwork {
 
     private static void handleAbilityRequest(ServerPlayer player, AbilityRequest request) {
         if (!AssassinAbilityManager.hasClass(player)) {
-            player.sendSystemMessage(net.minecraft.network.chat.Component.literal("You are not an Assassin."));
             return;
         }
         switch (request.ability()) {
