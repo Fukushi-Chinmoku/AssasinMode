@@ -49,6 +49,7 @@ public final class AssassinNetwork {
                         payload.assassin(), payload.shadowStepCooldown(), payload.shadowTwinCooldown(),
                         payload.shadowVeilCooldown(), payload.mirageCooldown(), payload.rapidAssaultCooldown(),
                         payload.sprintCooldown(), payload.backstepCooldown(), payload.perfectDodgeCooldown(),
+                        payload.shadowDanceCooldown(),
                         payload.skillPoints(), payload.unlockedSkillsMask(), payload.packedRanks())));
         registrar.playToClient(OPEN_SKILL_TREE_RESULT_TYPE, OpenSkillTreeResult.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
@@ -81,6 +82,7 @@ public final class AssassinNetwork {
                 AssassinAbilityManager.getCooldown(player, AssassinAbilityManager.TAG_SPRINT_CD),
                 AssassinAbilityManager.getCooldown(player, AssassinAbilityManager.TAG_BACKSTEP_CD),
                 AssassinAbilityManager.getCooldown(player, AssassinAbilityManager.TAG_PERFECT_DODGE_CD),
+                AssassinAbilityManager.getCooldown(player, AssassinAbilityManager.TAG_SHADOW_DANCE_CD),
                 AssassinProgression.getPoints(player), AssassinProgression.getUnlockedMask(player),
                 AssassinProgression.getPackedRanks(player)));
     }
@@ -128,6 +130,7 @@ public final class AssassinNetwork {
             case 5 -> AssassinAbilityManager.activateSprint(player);
             case 6 -> AssassinAbilityManager.activateBackstep(player);
             case 7 -> AssassinAbilityManager.activatePerfectDodge(player);
+            case 8 -> AssassinAbilityManager.activateShadowDance(player);
             default -> AssassinMod.LOGGER.warn("Ignoring unknown Assassin ability request {}", request.ability());
         }
     }
@@ -142,7 +145,7 @@ public final class AssassinNetwork {
 
     public record AbilityState(boolean assassin, int shadowStepCooldown, int shadowTwinCooldown,
                                int shadowVeilCooldown, int mirageCooldown, int rapidAssaultCooldown,
-                               int sprintCooldown, int backstepCooldown, int perfectDodgeCooldown,
+                               int sprintCooldown, int backstepCooldown, int perfectDodgeCooldown, int shadowDanceCooldown,
                                int skillPoints, int unlockedSkillsMask, long packedRanks) implements CustomPacketPayload {
         public static final StreamCodec<RegistryFriendlyByteBuf, AbilityState> STREAM_CODEC = StreamCodec.of(
                 (buffer, state) -> {
@@ -155,6 +158,7 @@ public final class AssassinNetwork {
                     buffer.writeVarInt(state.sprintCooldown());
                     buffer.writeVarInt(state.backstepCooldown());
                     buffer.writeVarInt(state.perfectDodgeCooldown());
+                    buffer.writeVarInt(state.shadowDanceCooldown());
                     buffer.writeVarInt(state.skillPoints());
                     buffer.writeVarInt(state.unlockedSkillsMask());
                     buffer.writeLong(state.packedRanks());
@@ -162,6 +166,7 @@ public final class AssassinNetwork {
                 buffer -> new AbilityState(buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt(),
                         buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(),
                         buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(),
+                        buffer.readVarInt(),
                         buffer.readLong()));
         @Override public Type<? extends CustomPacketPayload> type() { return ABILITY_STATE_TYPE; }
     }

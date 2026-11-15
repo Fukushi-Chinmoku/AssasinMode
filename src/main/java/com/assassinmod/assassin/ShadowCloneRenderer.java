@@ -18,8 +18,8 @@ public final class ShadowCloneRenderer extends LivingEntityRenderer<ShadowCloneE
 
     public ShadowCloneRenderer(EntityRendererProvider.Context context) {
         this(context,
-                new ShadowCloneModel(context.bakeLayer(ModelLayers.PLAYER), false),
-                new ShadowCloneModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true));
+                new ShadowCloneModel(context.bakeLayer(ModelLayers.PLAYER)),
+                new ShadowCloneModel(context.bakeLayer(ModelLayers.PLAYER_SLIM)));
     }
 
     private ShadowCloneRenderer(EntityRendererProvider.Context context,
@@ -82,6 +82,11 @@ public final class ShadowCloneRenderer extends LivingEntityRenderer<ShadowCloneE
         AbstractClientPlayer owner = getOwner(clone);
         if (owner != null) return owner.getSkin().texture();
         return ResourceLocation.withDefaultNamespace("textures/entity/player/wide/steve.png");
+    }
+
+    @Override
+    protected boolean shouldShowName(ShadowCloneEntity clone) {
+        return clone.isFullCopy() && super.shouldShowName(clone);
     }
 
     private AbstractClientPlayer getOwner(ShadowCloneEntity clone) {

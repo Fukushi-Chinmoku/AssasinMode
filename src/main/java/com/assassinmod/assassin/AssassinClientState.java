@@ -11,6 +11,7 @@ public final class AssassinClientState {
     private static int sprintCooldown;
     private static int backstepCooldown;
     private static int perfectDodgeCooldown;
+    private static int shadowDanceCooldown;
     private static int skillPoints;
     private static int unlockedSkillsMask;
     private static int[] skillRanks = new int[AssassinProgression.NODES.size()];
@@ -19,6 +20,7 @@ public final class AssassinClientState {
 
     public static void update(boolean isAssassin, int shadowStep, int shadowTwin, int shadowVeil, int mirage,
                               int rapidAssault, int sprint, int backstep, int perfectDodge,
+                              int shadowDance,
                               int points, int unlockedMask, long packedRanks) {
         assassin = isAssassin;
         shadowStepCooldown = Math.max(0, shadowStep);
@@ -29,6 +31,7 @@ public final class AssassinClientState {
         sprintCooldown = Math.max(0, sprint);
         backstepCooldown = Math.max(0, backstep);
         perfectDodgeCooldown = Math.max(0, perfectDodge);
+        shadowDanceCooldown = Math.max(0, shadowDance);
         skillPoints = Math.max(0, points);
         unlockedSkillsMask = unlockedMask;
         skillRanks = AssassinProgression.unpackRanks(packedRanks);
@@ -48,6 +51,7 @@ public final class AssassinClientState {
             case 5 -> sprintCooldown;
             case 6 -> backstepCooldown;
             case 7 -> perfectDodgeCooldown;
+            case 8 -> shadowDanceCooldown;
             default -> 0;
         };
     }

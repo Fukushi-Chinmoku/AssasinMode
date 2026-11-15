@@ -25,6 +25,7 @@ public final class AssassinKeyMappings {
     public static final KeyMapping SPRINT = new KeyMapping("key.assassin.sprint", GLFW.GLFW_KEY_H, "key.category.assassin");
     public static final KeyMapping BACKSTEP = new KeyMapping("key.assassin.backstep", GLFW.GLFW_KEY_N, "key.category.assassin");
     public static final KeyMapping PERFECT_DODGE = new KeyMapping("key.assassin.perfect_dodge", GLFW.GLFW_KEY_B, "key.category.assassin");
+    public static final KeyMapping SHADOW_DANCE = new KeyMapping("key.assassin.shadow_dance", GLFW.GLFW_KEY_J, "key.category.assassin");
     public static final KeyMapping SKILL_TREE = new KeyMapping("key.assassin.skill_tree", GLFW.GLFW_KEY_V, "key.category.assassin");
 
     private static boolean lastShadowStepDown;
@@ -35,6 +36,7 @@ public final class AssassinKeyMappings {
     private static boolean lastSprintDown;
     private static boolean lastBackstepDown;
     private static boolean lastPerfectDodgeDown;
+    private static boolean lastShadowDanceDown;
 
     private AssassinKeyMappings() {
     }
@@ -49,6 +51,7 @@ public final class AssassinKeyMappings {
         event.register(SPRINT);
         event.register(BACKSTEP);
         event.register(PERFECT_DODGE);
+        event.register(SHADOW_DANCE);
         event.register(SKILL_TREE);
     }
 
@@ -81,6 +84,7 @@ public final class AssassinKeyMappings {
         boolean sprintClicked = SPRINT.consumeClick();
         boolean backstepClicked = BACKSTEP.consumeClick();
         boolean perfectDodgeClicked = PERFECT_DODGE.consumeClick();
+        boolean shadowDanceClicked = SHADOW_DANCE.consumeClick();
         boolean shadowStepPressed = triggerOnPress(SHADOW_STEP, () -> lastShadowStepDown) || shadowStepClicked;
         boolean shadowTwinPressed = triggerOnPress(SHADOW_TWIN, () -> lastShadowTwinDown) || shadowTwinClicked;
         boolean shadowVeilPressed = triggerOnPress(SHADOW_VEIL, () -> lastShadowVeilDown) || shadowVeilClicked;
@@ -89,6 +93,7 @@ public final class AssassinKeyMappings {
         boolean sprintPressed = triggerOnPress(SPRINT, () -> lastSprintDown) || sprintClicked;
         boolean backstepPressed = triggerOnPress(BACKSTEP, () -> lastBackstepDown) || backstepClicked;
         boolean perfectDodgePressed = triggerOnPress(PERFECT_DODGE, () -> lastPerfectDodgeDown) || perfectDodgeClicked;
+        boolean shadowDancePressed = triggerOnPress(SHADOW_DANCE, () -> lastShadowDanceDown) || shadowDanceClicked;
 
         if (shadowStepPressed) {
             double range = AssassinProgression.getResourceValueForRank(9, 0,
@@ -139,6 +144,9 @@ public final class AssassinKeyMappings {
         if (perfectDodgePressed) {
             AssassinNetwork.sendAbilityRequest(7, -1);
         }
+        if (shadowDancePressed) {
+            AssassinNetwork.sendAbilityRequest(8, -1);
+        }
 
     }
 
@@ -154,6 +162,7 @@ public final class AssassinKeyMappings {
             case "key.assassin.sprint" -> lastSprintDown = current;
             case "key.assassin.backstep" -> lastBackstepDown = current;
             case "key.assassin.perfect_dodge" -> lastPerfectDodgeDown = current;
+            case "key.assassin.shadow_dance" -> lastShadowDanceDown = current;
             default -> {
             }
         }

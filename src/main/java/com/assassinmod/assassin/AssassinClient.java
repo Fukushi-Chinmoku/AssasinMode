@@ -12,8 +12,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -37,8 +37,11 @@ public final class AssassinClient {
         minecraft.setScreen(new AssassinSkillTreeScreen());
     }
 
-    public static void registerShadowCloneRenderer(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(AssassinEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
+    @SubscribeEvent
+    public static void hideCloneNameTags(final RenderNameTagEvent event) {
+        if (event.getEntity() instanceof ShadowCloneEntity clone && !clone.isFullCopy()) {
+            event.setCanRender(net.neoforged.neoforge.common.util.TriState.FALSE);
+        }
     }
 
     /** Snap the local camera after Shadow Step so the player looks straight at the target's back. */

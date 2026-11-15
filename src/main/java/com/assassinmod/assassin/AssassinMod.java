@@ -33,7 +33,7 @@ public class AssassinMod {
         NeoForge.EVENT_BUS.addListener(AssassinEventHandler::onPlayerClone);
         if (FMLEnvironment.dist.isClient()) {
             NeoForge.EVENT_BUS.addListener(AssassinKeyMappings::onClientTick);
-            modBus.addListener(AssassinClient::registerShadowCloneRenderer);
+            modBus.addListener(AssassinClientModEvents::registerShadowCloneRenderer);
         }
     }
 

@@ -73,6 +73,11 @@ public final class ShadowCloneEntity extends ArmorStand {
         setCustomNameVisible(true);
     }
 
+    @Override
+    public boolean shouldShowName() {
+        return isFullCopy() && isCustomNameVisible() && getCustomName() != null;
+    }
+
     public void setFullCopy(ServerPlayer owner) {
         entityData.set(FULL_COPY, true);
         showOwnerName(owner);
@@ -95,7 +100,10 @@ public final class ShadowCloneEntity extends ArmorStand {
         double dz = z - getZ();
         float speed = (float) Math.min(Math.sqrt(dx * dx + dz * dz) * 4.0D, 1.0D);
         entityData.set(ANIMATION_SPEED, speed);
-        entityData.set(ANIMATION_PHASE, entityData.get(ANIMATION_PHASE) + speed);
+        float cadence = isSprinting() ? 1.35F : 1.0F;
+        if (speed > 0.02F) {
+            entityData.set(ANIMATION_PHASE, entityData.get(ANIMATION_PHASE) + cadence);
+        }
         setPos(x, y, z);
     }
 

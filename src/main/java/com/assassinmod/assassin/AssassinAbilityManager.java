@@ -36,9 +36,11 @@ public final class AssassinAbilityManager {
     public static final String TAG_SPRINT_UNTIL = "assassin_sprint_until";
     public static final String TAG_BACKSTEP_CD = "assassin_backstep_cd";
     public static final String TAG_PERFECT_DODGE_CD = "assassin_perfect_dodge_cd";
+    public static final String TAG_SHADOW_DANCE_CD = "assassin_shadow_dance_cd";
     public static final String TAG_PERFECT_DODGE_UNTIL = "assassin_perfect_dodge_until";
     public static final String TAG_MIRAGE_EFFECT = "mirage_effect";
     public static final String TAG_MIRAGE_CLONE = "mirage_clone";
+    public static final String TAG_SHADOW_DANCE_UNTIL = "shadow_dance_until";
 
     private static final Map<UUID, MirageEffect> MIRAGES = new HashMap<>();
     private static final Random RANDOM = new Random();
@@ -68,6 +70,7 @@ public final class AssassinAbilityManager {
         player.getPersistentData().remove(TAG_SPRINT_UNTIL);
         player.getPersistentData().remove(TAG_BACKSTEP_CD);
         player.getPersistentData().remove(TAG_PERFECT_DODGE_CD);
+        player.getPersistentData().remove(TAG_SHADOW_DANCE_CD);
         player.getPersistentData().remove(TAG_PERFECT_DODGE_UNTIL);
     }
 
@@ -107,6 +110,7 @@ public final class AssassinAbilityManager {
         tickCooldown(player, TAG_SPRINT_CD);
         tickCooldown(player, TAG_BACKSTEP_CD);
         tickCooldown(player, TAG_PERFECT_DODGE_CD);
+        tickCooldown(player, TAG_SHADOW_DANCE_CD);
         if (player.getPersistentData().contains(TAG_RAPID_ASSAULT_UNTIL)
                 && player.level().getGameTime() >= player.getPersistentData().getLong(TAG_RAPID_ASSAULT_UNTIL)) {
             player.getPersistentData().remove(TAG_RAPID_ASSAULT_UNTIL);
@@ -225,6 +229,22 @@ public final class AssassinAbilityManager {
                     AssassinProgression.getResourceValue(player, 9, 1)));
         }
         return true;
+    }
+
+    public static void activateShadowDance(Player player) {
+        if (!hasClass(player)) return;
+        int rank = AssassinProgression.getRank(player, "shadow_dance");
+        if (rank <= 0) {
+            player.sendSystemMessage(Component.literal("Unlock Пляс теней in the skill tree first (press V)."));
+            return;
+        }
+        if (!canUse(player, TAG_SHADOW_DANCE_CD)) return;
+        player.getPersistentData().putLong(TAG_SHADOW_DANCE_UNTIL,
+                player.level().getGameTime() + rank * 20L);
+        setCooldown(player, TAG_SHADOW_DANCE_CD, 90 * 20);
+        if (player instanceof ServerPlayer serverPlayer) {
+            AssassinNetwork.syncAbilityStateNow(serverPlayer);
+        }
     }
 
     public static void activateSprint(Player player) {
@@ -413,7 +433,11 @@ public final class AssassinAbilityManager {
         if (AssassinProgression.hasSkill(player, "backstab")) {
             damage *= isBehindTarget(attacker, target) ? 2.0F : 0.5F;
         }
+        long now = player.level().getGameTime();
         double echoChance = AssassinProgression.getResourceValue(player, 3, 0) / 100.0D;
+        boolean shadowDanceActive = player.getPersistentData().getLong(TAG_SHADOW_DANCE_UNTIL) > now;
+        if (shadowDanceActive) echoChance = 1.0D;
+        echoChance = Math.min(echoChance, 1.0D);
         if (echoChance > 0.0D && RANDOM.nextDouble() < echoChance) {
             float cloneDamage = event.getOriginalDamage();
             if (AssassinProgression.hasSkill(player, "backstab")) {
@@ -423,7 +447,8 @@ public final class AssassinAbilityManager {
                 cloneDamage *= 0.1F;
             }
             if (player instanceof ServerPlayer serverPlayer) {
-                ShadowEchoHit.launch(serverPlayer, target, cloneDamage);
+                ShadowEchoHit.launch(serverPlayer, target, cloneDamage,
+                        AssassinProgression.hasSkill(player, "shadow_echo_followup"));
             }
             if (player.level() instanceof ServerLevel level) {
                 level.sendParticles(ParticleTypes.SMOKE, target.getX(), target.getY() + target.getBbHeight() * 0.5D,

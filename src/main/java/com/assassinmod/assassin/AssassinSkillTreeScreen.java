@@ -31,7 +31,7 @@ public final class AssassinSkillTreeScreen extends Screen {
             "sword_gold", "eye_green", "boots_gold", "twin_daggers",
             "potion_black", "boots_gold", "twin_daggers", "ghost",
             "ghost", "arrow_steel", "potion_indigo", "arrow_diamond",
-            "sword_iron", "ghost", "ghost"
+            "sword_iron", "ghost", "ghost", "ghost", "twin_daggers"
     };
     // Icons cut from the dark ability pack are 32x32, the rest of the set is 16x16.
     private static final java.util.Set<String> ICONS_32 = java.util.Set.of("twin_daggers", "ghost");
@@ -39,7 +39,8 @@ public final class AssassinSkillTreeScreen extends Screen {
             {0, -270}, {-84, -170}, {0, -170}, {84, -170},
             {-126, -70}, {0, -70}, {126, -70},
             {-168, 30}, {-126, 30}, {0, 30},
-            {-168, 130}, {-42, 130}, {0, 130}, {-42, 230}, {-210, -70}
+            {-168, 130}, {-42, 130}, {0, 130}, {-42, 230}, {-210, -70},
+            {168, -170}, {168, -70}
     };
     private static final int[] BRANCH_COLORS = {0xFF7CCBFF, 0xFFFF737E, 0xFFB483FF, 0xFF86E1C3};
     private static final int GRAPH_WIDTH = 460;

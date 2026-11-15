@@ -81,7 +81,18 @@ public final class AssassinProgression {
                     "Способность (B): гарантированно уклоняется от входящего урона в течение 5 секунд.",
                     1, 1, new int[]{1}, List.of(
                     new SkillResource("Гарантированное уклонение (секунды)", "5", "#ffff00"),
-                    new SkillResource("Перезарядка (секунды)", "60", "#ffffff")))
+                    new SkillResource("Перезарядка (секунды)", "60", "#ffffff"))),
+            new SkillNode(15, "shadow_dance", "Пляс теней", "Смертоносность",
+                    "Активная способность: каждый ваш удар создаёт клона на время действия. Длительность равна рангу в секундах.",
+                    1, 5, new int[]{3}, List.of(
+                    new SkillResource("Клон при каждом ударе", "100%", "#ff4747"),
+                    new SkillResource("Длительность (секунды)", "[CurrentPoints]", "#ffff00"),
+                    new SkillResource("Перезарядка (секунды)", "90", "#ffffff"))),
+            new SkillNode(16, "shadow_echo_followup", "Вторая тень", "Смертоносность",
+                    "Пассивное улучшение: после удара первого клона через секунду слева появляется второй и повторяет удар.",
+                    1, 1, new int[]{15}, List.of(
+                    new SkillResource("Задержка после удара (секунды)", "1", "#ffff00"),
+                    new SkillResource("Дополнительные тени", "1", "#ff4747")))
     );
 
     public static final List<Milestone> MILESTONES = List.of(
@@ -110,7 +121,8 @@ public final class AssassinProgression {
             {0, 1}, {0, 2}, {0, 3},
             {1, 4}, {2, 5}, {3, 6},
             {4, 7}, {4, 8}, {5, 9},
-            {8, 10}, {9, 11}, {9, 12}, {11, 13}, {1, 14}
+            {8, 10}, {9, 11}, {9, 12}, {11, 13}, {1, 14},
+            {3, 15}, {15, 16}
     };
     private static final Map<String, Milestone> MILESTONE_BY_ID = MILESTONES.stream()
             .collect(Collectors.toUnmodifiableMap(Milestone::advancement, milestone -> milestone));
@@ -301,7 +313,7 @@ public final class AssassinProgression {
     }
 
     public static void migrateSkillTree(ServerPlayer player) {
-        if (player == null || player.getPersistentData().getInt(TREE_REVISION_TAG) >= 5) return;
+        if (player == null || player.getPersistentData().getInt(TREE_REVISION_TAG) >= 6) return;
         int refunded = 0;
         for (var retired : RETIRED_SKILLS.entrySet()) {
             String tag = NODE_TAG_PREFIX + retired.getKey();
@@ -329,7 +341,7 @@ public final class AssassinProgression {
             player.sendSystemMessage(Component.literal("Your skill tree was updated. Refunded " + refunded
                     + " points from retired skills."));
         }
-        player.getPersistentData().putInt(TREE_REVISION_TAG, 5);
+        player.getPersistentData().putInt(TREE_REVISION_TAG, 6);
         AssassinNetwork.syncAbilityStateNow(player);
     }
 

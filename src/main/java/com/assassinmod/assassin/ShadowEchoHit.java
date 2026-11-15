@@ -17,7 +17,11 @@ import java.util.List;
 /** One-clone follow-up attack triggered by the Shadow Echo Hit skill. */
 public final class ShadowEchoHit {
     private static final List<ShadowEchoHit> ACTIVE = new ArrayList<>();
+    private static final List<DelayedStrike> DELAYED = new ArrayList<>();
 
+    private record DelayedStrike(ServerPlayer owner, LivingEntity target, float damage, long dueAt) {}
+
+    private final ServerPlayer owner;
     private final LivingEntity target;
     private final ServerLevel level;
     private final ShadowCloneEntity clone;
@@ -25,11 +29,14 @@ public final class ShadowEchoHit {
     private final Vec3 direction;
     private final double distance;
     private final float damage;
+    private final boolean canFollowUp;
     private double travelled;
     private int ticks;
 
-    private ShadowEchoHit(LivingEntity target, ServerLevel level,
-                          ShadowCloneEntity clone, Vec3 start, Vec3 direction, double distance, float damage) {
+    private ShadowEchoHit(ServerPlayer owner, LivingEntity target, ServerLevel level,
+                          ShadowCloneEntity clone, Vec3 start, Vec3 direction, double distance,
+                          float damage, boolean canFollowUp) {
+        this.owner = owner;
         this.target = target;
         this.level = level;
         this.clone = clone;
@@ -37,9 +44,19 @@ public final class ShadowEchoHit {
         this.direction = direction;
         this.distance = distance;
         this.damage = damage;
+        this.canFollowUp = canFollowUp;
     }
 
     public static void launch(ServerPlayer owner, LivingEntity target, float damage) {
+        launch(owner, target, damage, false);
+    }
+
+    public static void launch(ServerPlayer owner, LivingEntity target, float damage, boolean canFollowUp) {
+        launch(owner, target, damage, canFollowUp, 1.0D);
+    }
+
+    private static void launch(ServerPlayer owner, LivingEntity target, float damage,
+                               boolean canFollowUp, double sideSign) {
         if (!(owner.level() instanceof ServerLevel level) || !target.isAlive() || damage <= 0.0F) return;
 
         Vec3 towardTarget = target.position().subtract(owner.position());
@@ -50,7 +67,8 @@ public final class ShadowEchoHit {
         }
         forward = forward.normalize();
         Vec3 side = new Vec3(-forward.z, 0.0D, forward.x);
-        Vec3 spawn = owner.position().subtract(forward.scale(0.35D)).add(side.scale(1.25D));
+        Vec3 spawn = owner.position().subtract(forward.scale(0.35D))
+                .add(side.scale(1.25D * sideSign));
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 Mth.floor(spawn.x), Mth.floor(spawn.z));
         spawn = new Vec3(spawn.x, groundY, spawn.z);
@@ -63,7 +81,8 @@ public final class ShadowEchoHit {
         clone.setPos(spawn.x, spawn.y, spawn.z);
         faceTarget(clone, target);
 
-        ShadowEchoHit hit = new ShadowEchoHit(target, level, clone, spawn, direction, distance, damage);
+        ShadowEchoHit hit = new ShadowEchoHit(owner, target, level, clone, spawn, direction, distance,
+                damage, canFollowUp);
         level.addFreshEntity(clone);
         level.sendParticles(ParticleTypes.SQUID_INK, spawn.x, spawn.y + 1.0D, spawn.z,
                 8, 0.2D, 0.4D, 0.2D, 0.01D);
@@ -71,12 +90,22 @@ public final class ShadowEchoHit {
     }
 
     public static void tickAll() {
+        for (DelayedStrike delayed : new ArrayList<>(DELAYED)) {
+            if (!delayed.target().isAlive() || !delayed.owner().isAlive()
+                    || delayed.target().level() != delayed.owner().level()) {
+                DELAYED.remove(delayed);
+            } else if (delayed.owner().level().getGameTime() >= delayed.dueAt()) {
+                DELAYED.remove(delayed);
+                launch(delayed.owner(), delayed.target(), delayed.damage(), false, -1.0D);
+            }
+        }
         for (ShadowEchoHit hit : new ArrayList<>(ACTIVE)) hit.tick();
     }
 
     public static void clearAll() {
         for (ShadowEchoHit hit : new ArrayList<>(ACTIVE)) hit.finish();
         ACTIVE.clear();
+        DELAYED.clear();
     }
 
     private void tick() {
@@ -106,6 +135,9 @@ public final class ShadowEchoHit {
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8F, 1.15F);
             target.invulnerableTime = Math.min(target.invulnerableTime, 10);
             target.hurt(clone.damageSources().mobAttack(clone), damage);
+            if (canFollowUp && target.isAlive()) {
+                DELAYED.add(new DelayedStrike(owner, target, damage, level.getGameTime() + 20L));
+            }
             finish();
         }
     }
