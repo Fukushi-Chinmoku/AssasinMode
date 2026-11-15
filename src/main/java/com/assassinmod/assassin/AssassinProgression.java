@@ -9,25 +9,79 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class AssassinProgression {
+    public static final int EXPERIENCE_LEVELS_PER_POINT = 5;
+
+    public record SkillResource(String name, String formula, String color) {}
     public record SkillNode(int index, String id, String name, String branch, String description,
-                            int cost, int prerequisite) {}
+                            int cost, int maxRanks, int[] prerequisites, List<SkillResource> resources) {}
     public record Milestone(String advancement, String title, int points) {}
 
     public static final List<SkillNode> NODES = List.of(
-            new SkillNode(0, "swift_step", "Лёгкий шаг", "Ловкость", "Скорость передвижения ассасина повышается на 8%.", 1, -1),
-            new SkillNode(1, "shadow_step", "Теневой шаг", "Ловкость", "Открывает телепортацию за спину цели.", 1, 0),
-            new SkillNode(2, "far_step", "Дальняя тень", "Ловкость", "Перезарядка Теневого шага сокращается на 2 секунды.", 2, 1),
-            new SkillNode(3, "echo_step", "Повторный шаг", "Ловкость", "Перезарядка Теневого шага сокращается до 3 секунд.", 2, 2),
-            new SkillNode(4, "backstab", "Удар в спину", "Смертоносность", "Удар со спины наносит двойной урон.", 1, 0),
-            new SkillNode(5, "executioner", "Палач", "Смертоносность", "Удар в спину наносит в 2,5 раза больше урона.", 2, 4),
-            new SkillNode(6, "twin_rhythm", "Ритм клинков", "Смертоносность", "Парные клинки наносят на 15% больше урона.", 2, 5),
-            new SkillNode(7, "shadow_veil", "Покров тени", "Тень", "Открывает невидимость и усиливающий удар из тени.", 1, 0),
-            new SkillNode(8, "deep_veil", "Глубокая тень", "Тень", "Невидимость длится на 4 секунды дольше.", 2, 7),
-            new SkillNode(9, "veil_strike", "Удар из тени", "Тень", "Первый удар из невидимости получает усиленный бонус урона.", 2, 8),
-            new SkillNode(10, "mirage", "Мираж", "Обман", "Открывает рой приманок и туман у земли.", 1, 9),
-            new SkillNode(11, "false_horde", "Ложная толпа", "Обман", "Мираж создаёт ещё 20 приманок.", 2, 10),
-            new SkillNode(12, "lingering_mist", "Дымовая завеса", "Обман", "Мираж и ослепление длятся на 5 секунд дольше.", 2, 11),
-            new SkillNode(13, "phantom_lunge", "Призрачный рывок", "Обман", "Мираж может настигнуть цель на расстоянии до 45 блоков.", 2, 12)
+            new SkillNode(0, "backstab", "Рандеву жизни", "Смертоносность",
+                    "Стеклянная пушка: удар в спину наносит ×2 урона, удар в лицо — ×0,5.",
+                    1, 1, new int[0], List.of()),
+            new SkillNode(1, "evasion", "Увертливость", "Ловкость",
+                    "Даёт шанс уклониться от атаки.",
+                    1, 5, new int[]{0}, List.of(new SkillResource("Шанс уклонения", "[CurrentPoints*1]%", "#ff4747"))),
+            new SkillNode(2, "swift_step", "Проворность", "Ловкость",
+                    "Пассивно повышает скорость передвижения.",
+                    1, 5, new int[]{0}, List.of(new SkillResource("Скорость передвижения", "[5*(CurrentPoints/2)]%", "#ff4747"))),
+            new SkillNode(3, "shadow_echo_hit", "Удар из-подтишка", "Смертоносность",
+                    "С шансом появляется одна теневая копия и повторяет вашу атаку. Шанс увеличивается с каждым рангом.",
+                    1, 5, new int[]{0}, List.of(new SkillResource("Шанс появления клона", "[1*CurrentPoints]%", "#ff4747"))),
+            new SkillNode(4, "shadow_veil", "Теневой покров", "Тень",
+                    "На время действия полностью скрывает вас от противников.",
+                    1, 5, new int[]{1}, List.of(
+                    new SkillResource("Время действия (секунды)", "[CurrentPoints]", "#ffffff"),
+                    new SkillResource("Перезарядка (секунды)", "[30-(CurrentPoints*2)]", "#ffffff"))),
+            new SkillNode(5, "sprinting", "Срыв голени", "Ловкость",
+                    "Способность: скорость передвижения +35% на 3 секунды. Перезарядка уменьшается с рангом.",
+                    1, 5, new int[]{2}, List.of(
+                    new SkillResource("Скорость передвижения", "[30+(CurrentPoints*5)]%", "#ff4747"),
+                    new SkillResource("Время действия (секунды)", "3", "#ffff00"),
+                    new SkillResource("Перезарядка (секунды)", "[48-(CurrentPoints*3)]", "#ffffff"))),
+            new SkillNode(6, "shadow_twin", "Теневое эхо", "Смертоносность",
+                    "Отдельная способность (R): телепорт за спину и атака двумя теневыми клонами.",
+                    1, 5, new int[]{3}, List.of(
+                    new SkillResource("Урон клонов от урона игрока", "[75+(CurrentPoints*15)]%", "#ffffff"),
+                    new SkillResource("Дальность (блоков)", "[CurrentPoints*20]", "#ffffff"),
+                    new SkillResource("Перезарядка (секунды)", "[45-(CurrentPoints*5)]", "#ffffff"),
+                    new SkillResource("Время действия (секунды)", "[2+(CurrentPoints*0.4)]", "#ffff00"))),
+            new SkillNode(7, "quiet_step", "Тихая поступь", "Тень",
+                    "Уменьшает дистанцию, с которой существа замечают вас, пока вы не вступили в бой.",
+                    1, 3, new int[]{4}, List.of(new SkillResource("Снижение дистанции обнаружения", "[CurrentPoints*15]%", "#a878ff"))),
+            new SkillNode(8, "veil_double", "Зеркальная сущность", "Тень",
+                    "При активации Теневого покрова оставляет хаотично блуждающего клона-приманку.",
+                    1, 1, new int[]{4}, List.of()),
+            new SkillNode(9, "shadow_step", "Теневой шаг", "Ловкость",
+                    "Способность (Z): телепортирует за спину выбранной цели.",
+                    1, 5, new int[]{5}, List.of(
+                    new SkillResource("Дальность телепортации (блоки)", "[CurrentPoints*20]", "#ffffff"),
+                    new SkillResource("Перезарядка (секунды)", "[45-(CurrentPoints*5)]", "#ffffff"))),
+            new SkillNode(10, "mirage", "Мираж", "Обман",
+                    "Создаёт несколько иллюзий, кружащих вокруг врага и отвлекающих его.",
+                    1, 1, new int[]{8}, List.of(
+                    new SkillResource("Время действия (секунды)", "[6*CurrentPoints]", "#ffff00"),
+                    new SkillResource("Перезарядка (секунды)", "[60*CurrentPoints]", "#ffffff"))),
+            new SkillNode(11, "backstep", "Отшаг", "Ловкость",
+                    "Телепортирует назад, помогая уклониться от атаки.",
+                    1, 5, new int[]{9}, List.of(
+                    new SkillResource("Дальность (блоки)", "[1+CurrentPoints]", "#ffffff"),
+                    new SkillResource("Перезарядка (секунды)", "[100-(CurrentPoints*5)]", "#ffffff"))),
+            new SkillNode(12, "rapid_assault", "Вихрь", "Смертоносность",
+                    "На короткое время увеличивает скорость атаки в 10 раз, но уменьшает урон каждого удара в 10 раз.",
+                    1, 1, new int[]{9}, List.of(
+                    new SkillResource("Время действия (секунды)", "[5+(CurrentPoints*0)]", "#ffff00"),
+                    new SkillResource("Перезарядка (секунды)", "[60+(CurrentPoints*0)]", "#ffffff"))),
+            new SkillNode(13, "decoy", "Приманка", "Обман",
+                    "После Отшага оставляет на исходном месте иллюзию, отвлекающую врагов.",
+                    1, 5, new int[]{11}, List.of(
+                    new SkillResource("Время жизни иллюзии (секунды)", "[0.1+(CurrentPoints*0.5)]", "#ffffff"))),
+            new SkillNode(14, "perfect_dodge", "Идеальное уклонение", "Ловкость",
+                    "Способность (B): гарантированно уклоняется от входящего урона в течение 5 секунд.",
+                    1, 1, new int[]{1}, List.of(
+                    new SkillResource("Гарантированное уклонение (секунды)", "5", "#ffff00"),
+                    new SkillResource("Перезарядка (секунды)", "60", "#ffffff")))
     );
 
     public static final List<Milestone> MILESTONES = List.of(
@@ -44,13 +98,19 @@ public final class AssassinProgression {
 
     private static final String POINTS_TAG = "assassin_skill_points";
     private static final String NODE_TAG_PREFIX = "assassin_skill_";
+    private static final String RANK_TAG_PREFIX = "assassin_skill_rank_";
     private static final String MILESTONE_TAG_PREFIX = "assassin_milestone_";
-    // Three semicircular branches share a start. Shadow and deception skills
-    // continue along the outer arc, matching the third branch in the UI.
+    private static final String TREE_REVISION_TAG = "assassin_skill_tree_revision";
+    private static final Map<String, Integer> RETIRED_SKILLS = Map.ofEntries(
+            Map.entry("far_step", 2), Map.entry("echo_step", 2), Map.entry("executioner", 2),
+            Map.entry("twin_rhythm", 2), Map.entry("deep_veil", 2), Map.entry("veil_strike", 2),
+            Map.entry("false_horde", 2), Map.entry("lingering_mist", 2), Map.entry("phantom_lunge", 2),
+            Map.entry("pursuit", 1), Map.entry("marked_target", 1), Map.entry("shadow_guard", 1));
     public static final int[][] CONNECTIONS = {
-            {0, 1}, {1, 2}, {2, 3},
-            {0, 4}, {4, 5}, {5, 6},
-            {0, 7}, {7, 8}, {8, 9}, {9, 10}, {10, 11}, {11, 12}, {12, 13}
+            {0, 1}, {0, 2}, {0, 3},
+            {1, 4}, {2, 5}, {3, 6},
+            {4, 7}, {4, 8}, {5, 9},
+            {8, 10}, {9, 11}, {9, 12}, {11, 13}, {1, 14}
     };
     private static final Map<String, Milestone> MILESTONE_BY_ID = MILESTONES.stream()
             .collect(Collectors.toUnmodifiableMap(Milestone::advancement, milestone -> milestone));
@@ -62,7 +122,117 @@ public final class AssassinProgression {
     }
 
     public static boolean hasSkill(Player player, String id) {
-        return player != null && player.getPersistentData().getBoolean(NODE_TAG_PREFIX + id);
+        return getRank(player, id) > 0;
+    }
+
+    public static int getRank(Player player, String id) {
+        return player == null ? 0 : player.getPersistentData().getInt(RANK_TAG_PREFIX + id);
+    }
+
+    public static int getRank(Player player, int index) {
+        return player == null || index < 0 || index >= NODES.size() ? 0 : getRank(player, NODES.get(index).id());
+    }
+
+    public static double getResourceValue(Player player, int nodeIndex, int resourceIndex) {
+        if (nodeIndex < 0 || nodeIndex >= NODES.size()) return 0.0D;
+        return getResourceValueForRank(nodeIndex, resourceIndex, getRank(player, nodeIndex));
+    }
+
+    public static double getResourceValueForRank(int nodeIndex, int resourceIndex, int rank) {
+        if (nodeIndex < 0 || nodeIndex >= NODES.size()) return 0.0D;
+        SkillNode node = NODES.get(nodeIndex);
+        if (resourceIndex < 0 || resourceIndex >= node.resources().size()) return 0.0D;
+        return evaluateFormula(node.resources().get(resourceIndex).formula(), rank);
+    }
+
+    public static String formatResource(Player player, int nodeIndex, int resourceIndex) {
+        return formatResourceForRank(nodeIndex, resourceIndex, getRank(player, nodeIndex));
+    }
+
+    public static String formatResourceForRank(int nodeIndex, int resourceIndex, int rank) {
+        SkillResource resource = NODES.get(nodeIndex).resources().get(resourceIndex);
+        double value = getResourceValueForRank(nodeIndex, resourceIndex, rank);
+        String number = Math.abs(value - Math.rint(value)) < 0.0001D
+                ? Long.toString(Math.round(value))
+                : String.format(java.util.Locale.ROOT, "%.1f", value);
+        String sign = resource.formula().trim().startsWith("+") ? "+" : "";
+        return resource.name() + ": " + sign + number + (resource.formula().contains("%") ? "%" : "");
+    }
+
+    private static double evaluateFormula(String formula, int rank) {
+        String expression = formula.trim().replace("%", "");
+        if (expression.startsWith("[") && expression.endsWith("]")) {
+            expression = expression.substring(1, expression.length() - 1);
+        }
+        expression = expression.replace("CurrentPoints", Integer.toString(rank));
+        try {
+            FormulaParser parser = new FormulaParser(expression);
+            double result = parser.expression();
+            return parser.atEnd() && Double.isFinite(result) ? result : 0.0D;
+        } catch (IllegalArgumentException exception) {
+            return 0.0D;
+        }
+    }
+
+    private static final class FormulaParser {
+        private final String input;
+        private int cursor;
+
+        private FormulaParser(String input) {
+            this.input = input;
+        }
+
+        private double expression() {
+            double value = term();
+            while (true) {
+                skipSpaces();
+                if (take('+')) value += term();
+                else if (take('-')) value -= term();
+                else return value;
+            }
+        }
+
+        private double term() {
+            double value = factor();
+            while (true) {
+                skipSpaces();
+                if (take('*')) value *= factor();
+                else if (take('/')) value /= factor();
+                else return value;
+            }
+        }
+
+        private double factor() {
+            skipSpaces();
+            if (take('+')) return factor();
+            if (take('-')) return -factor();
+            if (take('(')) {
+                double value = expression();
+                skipSpaces();
+                if (!take(')')) throw new IllegalArgumentException("Unclosed formula group");
+                return value;
+            }
+            int start = cursor;
+            while (cursor < input.length()
+                    && (Character.isDigit(input.charAt(cursor)) || input.charAt(cursor) == '.')) cursor++;
+            if (start == cursor) throw new IllegalArgumentException("Expected formula value");
+            return Double.parseDouble(input.substring(start, cursor));
+        }
+
+        private boolean take(char expected) {
+            if (cursor >= input.length() || input.charAt(cursor) != expected) return false;
+            cursor++;
+            return true;
+        }
+
+        private void skipSpaces() {
+            while (cursor < input.length() && Character.isWhitespace(input.charAt(cursor))) cursor++;
+        }
+
+        private boolean atEnd() {
+            skipSpaces();
+            return cursor == input.length();
+        }
     }
 
     public static boolean isUnlocked(Player player, int index) {
@@ -72,8 +242,22 @@ public final class AssassinProgression {
     public static int getUnlockedMask(Player player) {
         int mask = 0;
         for (SkillNode node : NODES) if (isUnlocked(player, node.index())) mask |= 1 << node.index();
-        for (int i = 0; i < MILESTONES.size(); i++) if (hasEarnedMilestone(player, i)) mask |= 1 << (14 + i);
+        for (int i = 0; i < MILESTONES.size(); i++) if (hasEarnedMilestone(player, i)) mask |= 1 << (NODES.size() + i);
         return mask;
+    }
+
+    public static long getPackedRanks(Player player) {
+        long packed = 0L;
+        for (SkillNode node : NODES) {
+            packed |= (long) Math.min(7, getRank(player, node.index())) << (node.index() * 3);
+        }
+        return packed;
+    }
+
+    public static int[] unpackRanks(long packed) {
+        int[] ranks = new int[NODES.size()];
+        for (SkillNode node : NODES) ranks[node.index()] = (int) ((packed >>> (node.index() * 3)) & 0x7L);
+        return ranks;
     }
 
     public static boolean hasEarnedMilestone(Player player, int index) {
@@ -84,7 +268,8 @@ public final class AssassinProgression {
 
     public static void awardMilestone(ServerPlayer player, String advancementId) {
         Milestone milestone = MILESTONE_BY_ID.get(advancementId);
-        if (player == null || milestone == null || player.getPersistentData().getBoolean(ledgerKey(advancementId))) return;
+        if (player == null || !AssassinAbilityManager.hasClass(player) || milestone == null
+                || player.getPersistentData().getBoolean(ledgerKey(advancementId))) return;
         player.getPersistentData().putBoolean(ledgerKey(advancementId), true);
         addPoints(player, milestone.points());
         player.sendSystemMessage(Component.literal("Assassin skill point +" + milestone.points()
@@ -101,11 +286,59 @@ public final class AssassinProgression {
         AssassinNetwork.syncAbilityStateNow(player);
     }
 
+    public static boolean buySkillPoint(ServerPlayer player) {
+        if (player == null || !AssassinAbilityManager.hasClass(player)) return false;
+        if (player.experienceLevel < EXPERIENCE_LEVELS_PER_POINT) {
+            player.sendSystemMessage(Component.literal("You need " + EXPERIENCE_LEVELS_PER_POINT
+                    + " experience levels to buy a skill point."));
+            return false;
+        }
+        player.giveExperienceLevels(-EXPERIENCE_LEVELS_PER_POINT);
+        addPoints(player, 1);
+        player.sendSystemMessage(Component.literal("Bought 1 Assassin skill point for "
+                + EXPERIENCE_LEVELS_PER_POINT + " experience levels."));
+        return true;
+    }
+
+    public static void migrateSkillTree(ServerPlayer player) {
+        if (player == null || player.getPersistentData().getInt(TREE_REVISION_TAG) >= 5) return;
+        int refunded = 0;
+        for (var retired : RETIRED_SKILLS.entrySet()) {
+            String tag = NODE_TAG_PREFIX + retired.getKey();
+            String rankTag = RANK_TAG_PREFIX + retired.getKey();
+            int retiredRank = player.getPersistentData().getInt(rankTag);
+            if (retiredRank > 0) {
+                player.getPersistentData().remove(rankTag);
+                refunded += retiredRank;
+            }
+            if (player.getPersistentData().getBoolean(tag)) {
+                player.getPersistentData().remove(tag);
+                if (retiredRank == 0) refunded += retired.getValue();
+            }
+        }
+        for (SkillNode node : NODES) {
+            String legacy = NODE_TAG_PREFIX + node.id();
+            if (player.getPersistentData().getBoolean(legacy)
+                    && getRank(player, node.id()) == 0) {
+                player.getPersistentData().putInt(RANK_TAG_PREFIX + node.id(), 1);
+            }
+            player.getPersistentData().remove(legacy);
+        }
+        if (refunded > 0) {
+            player.getPersistentData().putInt(POINTS_TAG, getPoints(player) + refunded);
+            player.sendSystemMessage(Component.literal("Your skill tree was updated. Refunded " + refunded
+                    + " points from retired skills."));
+        }
+        player.getPersistentData().putInt(TREE_REVISION_TAG, 5);
+        AssassinNetwork.syncAbilityStateNow(player);
+    }
+
     public static boolean unlock(ServerPlayer player, int index) {
         if (player == null || !AssassinAbilityManager.hasClass(player) || index < 0 || index >= NODES.size()) return false;
         SkillNode node = NODES.get(index);
-        if (isUnlocked(player, index)) {
-            player.sendSystemMessage(Component.literal(node.name() + " is already unlocked."));
+        int currentRank = getRank(player, index);
+        if (currentRank >= node.maxRanks()) {
+            player.sendSystemMessage(Component.literal(node.name() + " is already at maximum rank."));
             return false;
         }
         if (!isReachable(player, index)) {
@@ -117,18 +350,18 @@ public final class AssassinProgression {
             return false;
         }
         player.getPersistentData().putInt(POINTS_TAG, getPoints(player) - node.cost());
-        player.getPersistentData().putBoolean(NODE_TAG_PREFIX + node.id(), true);
-        player.sendSystemMessage(Component.literal("Skill unlocked: " + node.name()));
+        player.getPersistentData().putInt(RANK_TAG_PREFIX + node.id(), currentRank + 1);
+        player.sendSystemMessage(Component.literal(node.name() + " rank " + (currentRank + 1) + "/" + node.maxRanks()));
         AssassinNetwork.syncAbilityStateNow(player);
         return true;
     }
 
     public static boolean isReachable(Player player, int index) {
-        for (int[] edge : CONNECTIONS) {
-            if ((edge[0] == index && isUnlocked(player, edge[1]))
-                    || (edge[1] == index && isUnlocked(player, edge[0]))) return true;
+        if (index < 0 || index >= NODES.size()) return false;
+        for (int prerequisite : NODES.get(index).prerequisites()) {
+            if (!isUnlocked(player, prerequisite)) return false;
         }
-        return NODES.get(index).prerequisite() < 0;
+        return true;
     }
 
     /** Refund and remove all learned branch nodes while preserving achievement claims. */
@@ -136,10 +369,9 @@ public final class AssassinProgression {
         if (player == null) return 0;
         int refunded = 0;
         for (SkillNode node : NODES) {
-            if (isUnlocked(player, node.index())) {
-                player.getPersistentData().remove(NODE_TAG_PREFIX + node.id());
-                refunded += node.cost();
-            }
+            int rank = getRank(player, node.index());
+            if (rank > 0) player.getPersistentData().remove(RANK_TAG_PREFIX + node.id());
+            refunded += rank * node.cost();
         }
         if (refunded > 0) player.getPersistentData().putInt(POINTS_TAG, getPoints(player) + refunded);
         AssassinNetwork.syncAbilityStateNow(player);
@@ -149,8 +381,13 @@ public final class AssassinProgression {
     public static void resetForTesting(ServerPlayer player) {
         if (player == null) return;
         player.getPersistentData().remove(POINTS_TAG);
-        for (SkillNode node : NODES) player.getPersistentData().remove(NODE_TAG_PREFIX + node.id());
+        for (SkillNode node : NODES) {
+            player.getPersistentData().remove(NODE_TAG_PREFIX + node.id());
+            player.getPersistentData().remove(RANK_TAG_PREFIX + node.id());
+        }
         for (Milestone milestone : MILESTONES) player.getPersistentData().remove(ledgerKey(milestone.advancement()));
+        for (String id : RETIRED_SKILLS.keySet()) player.getPersistentData().remove(NODE_TAG_PREFIX + id);
+        player.getPersistentData().remove(TREE_REVISION_TAG);
         AssassinNetwork.syncAbilityStateNow(player);
     }
 }

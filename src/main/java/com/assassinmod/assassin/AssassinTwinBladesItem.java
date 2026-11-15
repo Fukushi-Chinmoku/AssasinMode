@@ -19,14 +19,11 @@ public final class AssassinTwinBladesItem extends SwordItem {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide && hand == InteractionHand.MAIN_HAND) {
-            if (!AssassinAbilityManager.hasClass(player)) {
-                AssassinAbilityManager.giveClass(player);
-            }
             if (player.getOffhandItem().isEmpty()) {
                 player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(this));
             }
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "The Twin Blades bind you to the Assassin path. Press V to open your skill tree."));
+                    "The Twin Blades are ready. Use an Assassin Medallion to awaken the class."));
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }

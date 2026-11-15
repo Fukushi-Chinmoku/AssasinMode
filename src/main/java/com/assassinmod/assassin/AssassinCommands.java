@@ -19,16 +19,19 @@ public final class AssassinCommands {
 
     public static void register(final RegisterCommandsEvent event) {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("assassin")
-                .then(Commands.literal("give").executes(context -> giveClass(context)))
+                .then(Commands.literal("give").requires(source -> source.hasPermission(2))
+                        .executes(context -> giveClass(context)))
                 .then(Commands.literal("cooldown").then(Commands.literal("reset").executes(context -> resetCooldowns(context))))
-                .then(Commands.literal("test").then(Commands.literal("backstab").executes(context -> testBackstab(context)))
+                .then(Commands.literal("test").requires(source -> source.hasPermission(2))
+                        .then(Commands.literal("backstab").executes(context -> testBackstab(context)))
                         .then(Commands.literal("shadowstep").executes(context -> testShadowStep(context)))
                         .then(Commands.literal("veil").executes(context -> testVeil(context)))
                         .then(Commands.literal("mirage").executes(context -> testMirage(context))));
         root.then(Commands.literal("blades").requires(source -> source.hasPermission(2))
                 .executes(context -> giveTwinBlades(context)));
         root.then(Commands.literal("tree")
-                .then(Commands.literal("rewards").executes(context -> showMilestones(context)))
+        .then(Commands.literal("buy").executes(AssassinCommands::buySkillPoint))
+        .then(Commands.literal("rewards").executes(context -> showMilestones(context)))
                 .then(Commands.literal("testpoints")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 100))
@@ -38,6 +41,15 @@ public final class AssassinCommands {
                         .executes(context -> resetSkillTree(context)))
                 .then(Commands.literal("respec").executes(context -> respecSkillTree(context))));
         event.getDispatcher().register(root);
+    }
+
+    private static int buySkillPoint(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendFailure(Component.literal("This command can only be used by a player."));
+            return 0;
+        }
+        return AssassinProgression.buySkillPoint(player) ? 1 : 0;
     }
 
     private static int giveTwinBlades(CommandContext<CommandSourceStack> context) {
@@ -52,7 +64,8 @@ public final class AssassinCommands {
     }
 
     private static int showMilestones(CommandContext<CommandSourceStack> context) {
-        context.getSource().sendSuccess(() -> Component.literal("Assassin skill points come only from these milestones:"), false);
+        context.getSource().sendSuccess(() -> Component.literal(
+                "Buy skill points with 5 experience levels, or earn them from these milestones:"), false);
         for (AssassinProgression.Milestone milestone : AssassinProgression.MILESTONES) {
             context.getSource().sendSuccess(() -> Component.literal("• " + milestone.title() + " — "
                     + milestone.advancement() + " (" + milestone.points() + " point(s))"), false);

@@ -12,6 +12,8 @@ public final class AssassinItems {
     private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(AssassinMod.MOD_ID);
     public static final DeferredItem<AssassinTwinBladesItem> TWIN_BLADES = ITEMS.register("assassin_twin_blades",
             () -> new AssassinTwinBladesItem(new Item.Properties().stacksTo(1).durability(850).rarity(Rarity.RARE)));
+    public static final DeferredItem<AssassinMedallionItem> MEDALLION = ITEMS.register("assassin_medallion",
+            () -> new AssassinMedallionItem(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
 
     private AssassinItems() {}
 
@@ -22,5 +24,6 @@ public final class AssassinItems {
 
     private static void addToCreativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey().equals(CreativeModeTabs.COMBAT)) event.accept(TWIN_BLADES);
+        if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) event.accept(MEDALLION);
     }
 }
